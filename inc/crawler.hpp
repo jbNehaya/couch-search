@@ -18,17 +18,18 @@ public:
     void start_crawling();
     bool is_valid_link(std::string const& a_URL) const;
     void save_in_DB();
-    void print_information() const;
-    void run();
-
+    std::unordered_map<std::string, std::unordered_map<std::string, unsigned int> > words_index() ;
+    std::unordered_map<std::string, std::string> page_titles() ;
+    
 private:
 
     void bfs_crawl(std::vector<std::string> const& a_startUrls); 
     //void dfs_crawl(std::vector<std::string> const& a_startUrls); 
     void crawl_page(std::string const& a_url, unsigned int a_depth);
     bool should_skip_page(std::string const& a_url, unsigned int a_depth) const; 
-
     std::string extract_domain(std::string const& a_url) const;
+    void print_information() const;
+    
 
 
 private:
@@ -45,6 +46,8 @@ private:
     std::unordered_set<std::string> m_visited_pages;
     std::unordered_map<std::string, std::set<std::string>> m_page_linkes;
     std::unordered_map<std::string, unordered_map_page_with_count > m_words_index;
+    
+    std::unordered_map<std::string, std::string> m_page_titles;
 
 };
 
