@@ -1,5 +1,5 @@
 {
-    "start_URLs": ["https://harrypotter.fandom.com/wiki/Main_Page"],
+    "start_URLs": ["www.example.com/"],
     "max_pages": 100,
     "max_depth": 20,
     "crawl_mode": "BFS"
