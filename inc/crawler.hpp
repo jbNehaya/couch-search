@@ -38,15 +38,12 @@ private:
 
     unsigned int m_page_count;
     unsigned int m_ignored_links_count;
-
     const Configuration& m_config;
     Downloader m_downloader;
     PageParser m_parser;
-
     std::unordered_set<std::string> m_visited_pages;
     std::unordered_map<std::string, std::set<std::string>> m_page_linkes;
     std::unordered_map<std::string, unordered_map_page_with_count > m_words_index;
-    
     std::unordered_map<std::string, std::string> m_page_titles;
 
 };
