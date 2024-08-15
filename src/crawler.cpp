@@ -22,6 +22,16 @@ void Crawler::start_crawling()
     print_information();
 }
 
+std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>> Crawler::words_index() 
+{
+    return m_words_index;
+}
+
+std::unordered_map<std::string, std::string> Crawler::page_titles() 
+{
+    return m_page_titles;
+}
+
 void Crawler::bfs_crawl(std::vector<std::string> const& a_startUrls) 
 {
     std::queue<std::pair<std::string, unsigned int>> toVisit;
@@ -53,9 +63,13 @@ void Crawler::bfs_crawl(std::vector<std::string> const& a_startUrls)
 void Crawler::crawl_page(std::string const& a_url, unsigned int a_depth)
 {
     auto content = m_downloader.download_url_content(a_url);
-    m_parser.parsing(a_url);
+    m_parser.parsing(content);
+    
     m_page_linkes[a_url] =  m_parser.page_links();
-    m_words_index[a_url] = m_parser.word_index();
+    for (const auto& [word, count] : m_parser.word_index()) {
+        m_words_index[word][a_url] += count;
+    }
+    m_page_titles[a_url] = m_parser.title();
     m_visited_pages.insert(a_url);
     ++m_page_count;
 }
@@ -108,5 +122,6 @@ void Crawler::print_information() const
     std::cout << "Counts of words indexed: " << m_words_index.size() << "\n";
     std::cout << "Counts of pages crawled: " << m_page_count << "\n";
     std::cout << "Counts of ignored links: " << m_ignored_links_count << "\n";
+
 }
 
