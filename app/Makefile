@@ -8,13 +8,13 @@ CXXFLAGS += -std=c++17
 CPPFLAGS = -DDEBUG
 CPPFLAGS += -I$(INCLUDES_DIR)
 
-LDFLAGS = -lcurlpp -lcurl -lgumbo
+LDFLAGS = -lgumbo -lcurlpp -lcurl
 
 INCLUDES_DIR = ../inc/
 SOURCES_DIR = ../src/
 
-OBJECTS = $(SOURCES_DIR)configuration.o $(SOURCES_DIR)downloader.o $(SOURCES_DIR)pageParser.o $(SOURCES_DIR)crawler.o 
-OBJECTS += $(app/)manager.o 
+OBJECTS = $(SOURCES_DIR)configuration.o $(SOURCES_DIR)downloader.o $(SOURCES_DIR)pageParser.o $(SOURCES_DIR)crawler.o  $(SOURCES_DIR)query.o 
+OBJECTS += $(app/)searchEngine.o 
 TARGET = app
 
 $(TARGET) : $(OBJECTS) configuration.json
