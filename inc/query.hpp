@@ -10,7 +10,7 @@
 
 class Query {
 public:
-
+    
     using unordered_map_page_with_count = std::unordered_map<std::string, unsigned int>;
     Query(const std::unordered_map<std::string, unordered_map_page_with_count>& a_words_index,
           const std::unordered_map<std::string, std::string>& a_page_titles,
@@ -25,16 +25,15 @@ private:
     void trim_results(std::vector<std::pair<std::string, unsigned int>>& a_results) const;
     std::vector<std::pair<std::string, std::string>> map_to_titles(const std::vector<std::pair<std::string, unsigned int>>& a_results) const;
 
+    using ResultPair = std::pair<std::string, unsigned int>;
+    using ResultVector = std::vector<ResultPair>;
+    ResultVector intersect_results(ResultVector const& a_first_results, ResultVector const& a_second_results) const;
+
 private:
 
     std::unordered_map<std::string, unordered_map_page_with_count > m_words_index;
     std::unordered_map<std::string, std::string> m_page_titles;
     unsigned int m_max_results;
-
-
 };
-
-
-
 #endif //QUERY_HPP_
 

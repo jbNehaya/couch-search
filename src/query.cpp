@@ -1,3 +1,4 @@
+#include<sstream>
 #include"query.hpp"
 
 Query::Query(const std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>>& a_words_index,
@@ -11,8 +12,25 @@ Query::Query(const std::unordered_map<std::string, std::unordered_map<std::strin
 
 std::vector<std::pair<std::string, std::string>> Query::search(std::string const& a_term)
 {
-    auto results_for_term = get_results_for_term(a_term);
-    auto sorted_results = sort_results_descending(results_for_term);
+    std::istringstream stream_to_split(a_term);
+    std::vector<std::string> terms;
+    std::string word_from_strem;
+
+    while(stream_to_split >> word_from_strem){
+        terms.push_back(word_from_strem);
+    }
+
+    if(terms.empty()){
+        return {};
+    }
+
+    auto results = get_results_for_term(terms[0]);
+    for(size_t i = 1; i<terms.size();++i){
+        auto term_results = get_results_for_term(terms[i]);
+        results = intersect_results(results, term_results);
+    }
+
+    auto sorted_results = sort_results_descending(results);
     trim_results(sorted_results);
     return map_to_titles(sorted_results);
 }
@@ -33,9 +51,10 @@ std::vector<std::pair<std::string, unsigned int>> Query::get_results_for_term(st
 
 std::vector<std::pair<std::string, unsigned int>> Query::sort_results_descending(std::vector<std::pair<std::string, unsigned int>>& a_results) const
 {
-    std::sort(a_results.begin(), a_results.end(), [](const auto& a, const auto& b) {
-        return a.second > b.second; 
-    });
+    std::sort(a_results.begin(), a_results.end(), 
+             [](const auto& a, const auto& b) {
+                return a.second > b.second; 
+              });
 
     return a_results;
 }
@@ -61,4 +80,20 @@ std::vector<std::pair<std::string, std::string>> Query::map_to_titles(const std:
     }
 
     return titled_results;
+}
+
+Query::ResultVector Query::intersect_results(Query::ResultVector const& a_first_results, Query::ResultVector const& a_second_results) const
+{
+    std::unordered_map<std::string, unsigned int> result_map;
+    for (const auto& [page, count] : a_first_results){
+        result_map[page] = count;
+    }
+    
+    Query::ResultVector intersection;
+    for(const auto& [page, count] : a_second_results){
+        if(result_map.find(page) != result_map.end()){
+            intersection.emplace_back(page, result_map[page]+ count);
+        }
+    }
+    return intersection;
 }
