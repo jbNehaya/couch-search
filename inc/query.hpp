@@ -29,6 +29,15 @@ private:
     using ResultVector = std::vector<ResultPair>;
     ResultVector intersect_results(ResultVector const& a_first_results, ResultVector const& a_second_results) const;
 
+    using ExcludeTerms_Neg = std::vector<std::string>;
+    using IncludeTerms_Pos = std::vector<std::string>;
+    using PairPositiveNeg =  std::pair<IncludeTerms_Pos,ExcludeTerms_Neg>;
+    PairPositiveNeg parse_term_to_pos_neg(std::string const& a_term);
+    ResultVector process_inclusion_terms(IncludeTerms_Pos const& a_include_terms);
+    ResultVector process_exclusion_terms(ResultVector a_results_from_process_include,ExcludeTerms_Neg const& a_exclude_terms);
+    ResultVector filter_exclusions(ResultVector a_results_from_process_include,ResultVector a_results_from_process_exclude);
+
+
 private:
 
     std::unordered_map<std::string, unordered_map_page_with_count > m_words_index;
