@@ -11,7 +11,7 @@ Query::Query(const std::unordered_map<std::string, std::unordered_map<std::strin
 {
 }
 
-std::vector<std::pair<std::string, std::string>> Query::search(std::string const& a_term)
+Query::SearchResult Query::search(std::string const& a_term)
 {
 
     auto [include_terms, exclude_terms] = parse_term_to_pos_neg(a_term);
@@ -22,9 +22,9 @@ std::vector<std::pair<std::string, std::string>> Query::search(std::string const
     return map_to_titles(sorted_results);
 }
 
-std::vector<std::pair<std::string, unsigned int>> Query::get_results_for_term(std::string const& a_term) const
+Query::ResultVector Query::get_results_for_term(std::string const& a_term) const
 {
-    std::vector<std::pair<std::string, unsigned int>> results;
+    Query::ResultVector results;
 
     auto it = m_words_index.find(a_term);
     if (it != m_words_index.end()) {
@@ -36,7 +36,7 @@ std::vector<std::pair<std::string, unsigned int>> Query::get_results_for_term(st
     return results;
 }
 
-std::vector<std::pair<std::string, unsigned int>> Query::sort_results_descending(std::vector<std::pair<std::string, unsigned int>>& a_results) const
+Query::ResultVector Query::sort_results_descending(Query::ResultVector& a_results) const
 {
     std::sort(a_results.begin(), a_results.end(), 
              [](const auto& a, const auto& b) {
@@ -46,14 +46,14 @@ std::vector<std::pair<std::string, unsigned int>> Query::sort_results_descending
     return a_results;
 }
 
-void Query::trim_results(std::vector<std::pair<std::string, unsigned int>>& a_results) const
+void Query::trim_results(Query::ResultVector& a_results) const
 {
     if (m_max_results > 0 && a_results.size() > m_max_results) {
         a_results.resize(m_max_results);
     }
 }
 
-std::vector<std::pair<std::string, std::string>> Query::map_to_titles(const std::vector<std::pair<std::string, unsigned int>>& a_results) const
+std::vector<std::pair<std::string, std::string>> Query::map_to_titles(const Query::ResultVector& a_results) const
 {
     std::vector<std::pair<std::string, std::string>> titled_results;
 
