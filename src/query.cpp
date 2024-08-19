@@ -1,4 +1,5 @@
 #include<sstream>
+#include<unordered_set>
 #include"query.hpp"
 
 Query::Query(const std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>>& a_words_index,
@@ -12,24 +13,10 @@ Query::Query(const std::unordered_map<std::string, std::unordered_map<std::strin
 
 std::vector<std::pair<std::string, std::string>> Query::search(std::string const& a_term)
 {
-    std::istringstream stream_to_split(a_term);
-    std::vector<std::string> terms;
-    std::string word_from_strem;
 
-    while(stream_to_split >> word_from_strem){
-        terms.push_back(word_from_strem);
-    }
-
-    if(terms.empty()){
-        return {};
-    }
-
-    auto results = get_results_for_term(terms[0]);
-    for(size_t i = 1; i<terms.size();++i){
-        auto term_results = get_results_for_term(terms[i]);
-        results = intersect_results(results, term_results);
-    }
-
+    auto [include_terms, exclude_terms] = parse_term_to_pos_neg(a_term);
+    auto results = process_inclusion_terms(include_terms);
+    results = process_exclusion_terms(results, exclude_terms);
     auto sorted_results = sort_results_descending(results);
     trim_results(sorted_results);
     return map_to_titles(sorted_results);
@@ -96,4 +83,67 @@ Query::ResultVector Query::intersect_results(Query::ResultVector const& a_first_
         }
     }
     return intersection;
+}
+
+Query::PairPositiveNeg Query::parse_term_to_pos_neg(std::string const& a_term)
+{
+    std::istringstream stream_to_split(a_term);
+    Query::ExcludeTerms_Neg excludeTerms;
+    Query::IncludeTerms_Pos includeTerms;
+    std::string word_from_strem;
+
+    while(stream_to_split >> word_from_strem){
+        if(word_from_strem[0] == '-'){
+            excludeTerms.push_back(word_from_strem.substr(1)); // beacuse should be without - to search 
+        }
+        else{
+            includeTerms.push_back(word_from_strem);
+        }
+    }
+    Query::PairPositiveNeg result{includeTerms,excludeTerms};
+    return result;
+}
+
+Query::ResultVector Query::process_inclusion_terms(Query::IncludeTerms_Pos const& a_include_terms)
+{
+    if(a_include_terms.empty()){
+        return {};
+    }
+    size_t size = a_include_terms.size();
+    auto results = get_results_for_term(a_include_terms[0]);
+    for(size_t i = 1; i<size; ++i){
+        auto term_results = get_results_for_term(a_include_terms[i]);
+        results = intersect_results(results, term_results);
+    }
+    return results;
+}
+
+
+Query::ResultVector Query::process_exclusion_terms(Query::ResultVector a_results_from_process_include, Query::ExcludeTerms_Neg const& a_exclude_terms)
+{
+    if(a_results_from_process_include.empty()){
+        return {};
+    }
+
+    for(auto const& term : a_exclude_terms){
+        auto exc_res = get_results_for_term(term);
+        a_results_from_process_include = filter_exclusions(a_results_from_process_include, exc_res);
+    }
+    return a_results_from_process_include;
+}
+
+Query::ResultVector Query::filter_exclusions(Query::ResultVector a_results_from_process_include, Query::ResultVector a_results_from_process_exclude)
+{
+    std::unordered_set<std::string> exclusions;
+    for (const auto& page : a_results_from_process_exclude){
+        exclusions.insert(page.first);
+    }
+    
+    Query::ResultVector filtered_res;
+    for(const auto& res : a_results_from_process_include){
+        if(exclusions.find(res.first) == exclusions.end()){
+            filtered_res.emplace_back(res);
+        }
+    }
+    return filtered_res;
 }
