@@ -12,40 +12,18 @@
 
 class Crawler {
 public:
+    virtual ~Crawler() = default;
 
-    Crawler(Configuration const& a_config);
+    virtual void start_crawling() = 0;
+    virtual std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>> words_index() const = 0;
+    virtual std::unordered_map<std::string, std::string> page_titles() const = 0;
 
-    void start_crawling();
-    bool is_valid_link(std::string const& a_URL) const;
-    void save_in_DB();
-    std::unordered_map<std::string, std::unordered_map<std::string, unsigned int> > words_index() ;
-    std::unordered_map<std::string, std::string> page_titles() ;
-    
-private:
-
-    void bfs_crawl(std::vector<std::string> const& a_startUrls); 
-    //void dfs_crawl(std::vector<std::string> const& a_startUrls); 
-    void crawl_page(std::string const& a_url, unsigned int a_depth);
-    bool should_skip_page(std::string const& a_url, unsigned int a_depth) const; 
-    std::string extract_domain(std::string const& a_url) const;
-    void print_information() const;
-    
-
-
-private:
-
-    using unordered_map_page_with_count = std::unordered_map<std::string, unsigned int>;
-
-    unsigned int m_page_count;
-    unsigned int m_ignored_links_count;
-    const Configuration& m_config;
-    Downloader m_downloader;
-    PageParser m_parser;
-    std::unordered_set<std::string> m_visited_pages;
-    std::unordered_map<std::string, std::set<std::string>> m_page_linkes;
-    std::unordered_map<std::string, unordered_map_page_with_count > m_words_index;
-    std::unordered_map<std::string, std::string> m_page_titles;
-
+protected:
+    virtual void crawl_page(std::string const& a_url, unsigned int a_depth) = 0;
+    virtual bool should_skip_page(std::string const& a_url, unsigned int a_depth) const = 0;
+    virtual std::string extract_domain(std::string const& a_url) const = 0;
+    virtual bool is_valid_link(std::string const& a_URL) const = 0;
+    virtual void print_information() const = 0;
 };
 
 #endif // CRAWLER_HPP_
