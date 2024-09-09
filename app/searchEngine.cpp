@@ -6,6 +6,7 @@
 #include"query.hpp"
 #include"BFSCrawler.hpp"
 #include"DFSCrawler.hpp"
+#include "client.hpp"
 
 void save_data(const std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>>& words_index,
                const std::unordered_map<std::string, std::string>& page_titles) 
@@ -21,6 +22,9 @@ int main()
 {
     try {
         Configuration config("configuration.json");
+
+        std::string port = "127.0.0.1"; 
+        Client client(port, 1401);
 
         std::unique_ptr<Crawler> crawler;
         if(config.crawl_mode() == CRAWL_MODE::BFS) {
@@ -48,6 +52,12 @@ int main()
                 break;
             }
 
+            client.send_request(search_term);
+            std::string response = client.recieve_response();
+
+            std::cout << "Response:\n" << response << "\n";
+
+            /*
             auto results = query.search(search_term);
             std::cout << "\nSearch results for term '" << search_term << "':\n";
             for (const auto& [url, title] : results) {
@@ -59,7 +69,10 @@ int main()
             if (results.empty()) {
                 std::cout << "No results found for the term '" << search_term << "'.\n";
             }
-            std::cout << "\n";
+            std::cout << "\n";*/
+            /*std::string response = client.recieve_response();
+            std::cout << "\nSearch results for term '" << search_term << "':\n" << response << "\n";*/
+
         }
 
         std::cout << "Search phase ended. Exiting program.\n";
