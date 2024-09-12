@@ -6,6 +6,9 @@
 #include<string>
 #include<vector>
 #include <utility> 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 class Query {
 public:
@@ -36,13 +39,21 @@ private:
     PairPositiveNeg parse_term_to_pos_neg(std::string const& a_term);
     ResultVector process_inclusion_terms(IncludeTerms_Pos const& a_include_terms);
     ResultVector process_exclusion_terms(ResultVector a_results_from_process_include,ExcludeTerms_Neg const& a_exclude_terms);
-    ResultVector filter_exclusions(ResultVector a_results_from_process_include,ResultVector a_results_from_process_exclude);
+    ResultVector filter_exclusions(ResultVector a_results_from_process_include,std::unordered_set<std::string> a_exclusions);
+
+    void process_inclusion_terms_worker(size_t a_start, size_t a_end, const IncludeTerms_Pos& a_include_terms, ResultVector& a_results, std::mutex& a_res_mutex) const;
+    void process_exclusion_terms_worker(size_t a_start, size_t a_end, const ExcludeTerms_Neg& a_exclude_terms, std::unordered_set<std::string>& a_exclusions, std::mutex& a_exclusions_mutex) const; 
+
 
 private:
 
     WordsIndexMap m_words_index;
     PageTitleMap m_page_titles;
     unsigned int m_max_results;
+
+    mutable std::mutex m_mutex;
+    mutable std::condition_variable m_cv;
+    bool m_done = false;
+    std::vector<std::thread> m_threads;
 };
 #endif //QUERY_HPP_
-

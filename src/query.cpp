@@ -109,15 +109,44 @@ Query::ResultVector Query::process_inclusion_terms(Query::IncludeTerms_Pos const
     if(a_include_terms.empty()){
         return {};
     }
-    size_t size = a_include_terms.size();
+    
     auto results = get_results_for_term(a_include_terms[0]);
-    for(size_t i = 1; i<size; ++i){
-        auto term_results = get_results_for_term(a_include_terms[i]);
-        results = intersect_results(results, term_results);
+    size_t num_threads = std::thread::hardware_concurrency();
+    size_t size = a_include_terms.size();
+    size_t step = size/num_threads;
+    std::vector<std::thread> threads;
+    std::mutex result_mutex;
+
+    for(size_t i=0; i < num_threads; ++i){
+        size_t start = i*step + 1;
+        size_t end =start + step;
+        if(i == num_threads -1){
+            end = size;
+        }
+        threads.emplace_back(&Query::process_inclusion_terms_worker, this, start, end, std::ref(a_include_terms), std::ref(results), std::ref(result_mutex));
     }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+
+    
     return results;
 }
 
+void Query::process_inclusion_terms_worker(size_t a_start, size_t a_end, const IncludeTerms_Pos& a_include_terms, ResultVector& a_results, std::mutex& a_res_mutex) const 
+{
+        auto term_results = get_results_for_term(a_include_terms[a_start]);
+        for(size_t i = a_start + 1; i< a_end; ++i){
+            auto next_term_res = get_results_for_term(a_include_terms[i]);
+            term_results = intersect_results(term_results, next_term_res);
+        }
+
+        std::lock_guard<std::mutex> lock(a_res_mutex);
+        a_results = intersect_results(a_results, term_results);
+
+}
 
 Query::ResultVector Query::process_exclusion_terms(Query::ResultVector a_results_from_process_include, Query::ExcludeTerms_Neg const& a_exclude_terms)
 {
@@ -125,23 +154,51 @@ Query::ResultVector Query::process_exclusion_terms(Query::ResultVector a_results
         return {};
     }
 
-    for(auto const& term : a_exclude_terms){
-        auto exc_res = get_results_for_term(term);
-        a_results_from_process_include = filter_exclusions(a_results_from_process_include, exc_res);
+    std::unordered_set<std::string> exclusions;
+    size_t num_threads = std::thread::hardware_concurrency();
+    size_t size = a_exclude_terms.size();
+    size_t step = size/num_threads;
+    std::vector<std::thread> threads;
+    std::mutex exc_mutex;
+
+    for(size_t i=0; i < num_threads; ++i){
+        size_t start = i*step + 1;
+        size_t end =start + step;
+        if(i == num_threads -1){
+            end = size;
+        }
+        threads.emplace_back(&Query::process_exclusion_terms_worker, this, start, end, std::ref(a_exclude_terms), std::ref(exclusions), std::ref(exc_mutex));
     }
-    return a_results_from_process_include;
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    return filter_exclusions(a_results_from_process_include, exclusions);
 }
 
-Query::ResultVector Query::filter_exclusions(Query::ResultVector a_results_from_process_include, Query::ResultVector a_results_from_process_exclude)
+void Query::process_exclusion_terms_worker(size_t a_start, size_t a_end, const ExcludeTerms_Neg& a_exclude_terms, std::unordered_set<std::string>& a_exclusions, std::mutex& a_exclusions_mutex) const 
 {
-    std::unordered_set<std::string> exclusions;
-    for (const auto& page : a_results_from_process_exclude){
-        exclusions.insert(page.first);
+    for (size_t i = a_start; i < a_end; ++i) {
+        auto exc_res = get_results_for_term(a_exclude_terms[i]);
+        std::unordered_set<std::string> local_exclusions;
+        for (const auto& page : exc_res) {
+            local_exclusions.insert(page.first);
+        }
+        {
+            std::lock_guard<std::mutex> lock(a_exclusions_mutex);
+            a_exclusions.insert(local_exclusions.begin(), local_exclusions.end());    
+        }
+        
     }
+}
+
+Query::ResultVector Query::filter_exclusions(Query::ResultVector a_results_from_process_include, std::unordered_set<std::string> a_exclusions)
+{
     
     Query::ResultVector filtered_res;
     for(const auto& res : a_results_from_process_include){
-        if(exclusions.find(res.first) == exclusions.end()){
+        if(a_exclusions.find(res.first) == a_exclusions.end()){
             filtered_res.emplace_back(res);
         }
     }

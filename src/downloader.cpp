@@ -12,8 +12,6 @@ std::string Downloader::download_url_content(std::string const& a_URL)
         m_request.setOpt(curlpp::options::WriteStream(&response));
         m_request.perform();
 
-        //std::cout<<"Content: " << response.str() << "\n";
-
     } catch(curlpp::RuntimeError &e){
         std::cerr << "Runtime error: " << e.what() << "\n";
     } catch(curlpp::LogicError &e){

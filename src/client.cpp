@@ -11,7 +11,7 @@ Client::Client(const std::string& a_server_ip, unsigned int a_server_port)
 {
 }
 
-size_t Client::write_callback(void* a_contents, size_t a_size, size_t a_nmemb, std::string* a_response)
+static size_t write_callback(void* a_contents, size_t a_size, size_t a_nmemb, std::string* a_response)
 {
     size_t total_size = a_size * a_nmemb;
     a_response->append(static_cast<char*>(a_contents), total_size); 
@@ -37,10 +37,14 @@ std::string Client::url_encode(const std::string& value)
 
 void Client::send_request(const std::string& a_term)
 {
+    
     CURL* curl;
     CURLcode res;
 
-    m_response.clear();
+    {
+        std::lock_guard<std::mutex> lock(m_response_mutex);
+        m_response.clear();
+    }
     curl = curl_easy_init();
 
     if (curl) {
@@ -59,9 +63,11 @@ void Client::send_request(const std::string& a_term)
 
         curl_easy_cleanup(curl);
     }
+    
 }
 
 std::string Client::recieve_response()
 {
-     return m_response;
+    std::lock_guard<std::mutex> lock(m_response_mutex);
+    return m_response;
 }

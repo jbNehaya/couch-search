@@ -41,4 +41,3 @@ private:
 };
 
 #endif //PAGEPARSER_HPP_
-

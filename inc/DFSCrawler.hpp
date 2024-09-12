@@ -39,4 +39,3 @@ private:
 };
 
 #endif // DFSCRAWLER_HPP_
-
