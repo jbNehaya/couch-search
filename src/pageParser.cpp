@@ -2,9 +2,8 @@
 #include<sstream>
 #include<cctype>
 #include<algorithm>
-#include "pageParser.hpp"
-
 #include<iostream>
+#include "pageParser.hpp"
 
 void PageParser::parsing(std::string const& a_content)
 {
