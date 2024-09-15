@@ -135,7 +135,7 @@ Query::ResultVector Query::process_inclusion_terms(Query::IncludeTerms_Pos const
 void Query::process_inclusion_terms_worker(size_t a_start, size_t a_end, const IncludeTerms_Pos& a_include_terms, ResultVector& a_results) const 
 {
         auto term_results = get_results_for_term(a_include_terms[a_start]);
-        for(size_t i = a_start + 1; i< a_end; ++i){
+        for(size_t i = a_start ; i< a_end; ++i){
             auto next_term_res = get_results_for_term(a_include_terms[i]);
             term_results = intersect_results(term_results, next_term_res);
         }
