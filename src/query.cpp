@@ -114,28 +114,25 @@ Query::ResultVector Query::process_inclusion_terms(Query::IncludeTerms_Pos const
     size_t num_threads = std::thread::hardware_concurrency();
     size_t size = a_include_terms.size();
     size_t step = size/num_threads;
-    std::vector<std::thread> threads;
-    std::mutex result_mutex;
+    m_threads.clear();
 
     for(size_t i=0; i < num_threads; ++i){
         size_t start = i*step + 1;
         size_t end =start + step;
-        if(i == num_threads -1){
+        if(i == num_threads -1){// beacuse if this last thread should include all remaining terms
             end = size;
         }
-        threads.emplace_back(&Query::process_inclusion_terms_worker, this, start, end, std::ref(a_include_terms), std::ref(results), std::ref(result_mutex));
+        m_threads.emplace_back(&Query::process_inclusion_terms_worker, this, start, end, std::ref(a_include_terms), std::ref(results));
     }
 
-    for (auto& thread : threads) {
+    for (auto& thread : m_threads) {
         thread.join();
     }
-
-
     
     return results;
 }
 
-void Query::process_inclusion_terms_worker(size_t a_start, size_t a_end, const IncludeTerms_Pos& a_include_terms, ResultVector& a_results, std::mutex& a_res_mutex) const 
+void Query::process_inclusion_terms_worker(size_t a_start, size_t a_end, const IncludeTerms_Pos& a_include_terms, ResultVector& a_results) const 
 {
         auto term_results = get_results_for_term(a_include_terms[a_start]);
         for(size_t i = a_start + 1; i< a_end; ++i){
@@ -143,7 +140,7 @@ void Query::process_inclusion_terms_worker(size_t a_start, size_t a_end, const I
             term_results = intersect_results(term_results, next_term_res);
         }
 
-        std::lock_guard<std::mutex> lock(a_res_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         a_results = intersect_results(a_results, term_results);
 
 }
@@ -158,26 +155,25 @@ Query::ResultVector Query::process_exclusion_terms(Query::ResultVector a_results
     size_t num_threads = std::thread::hardware_concurrency();
     size_t size = a_exclude_terms.size();
     size_t step = size/num_threads;
-    std::vector<std::thread> threads;
-    std::mutex exc_mutex;
-
+    m_threads.clear();
+    
     for(size_t i=0; i < num_threads; ++i){
         size_t start = i*step + 1;
         size_t end =start + step;
         if(i == num_threads -1){
             end = size;
         }
-        threads.emplace_back(&Query::process_exclusion_terms_worker, this, start, end, std::ref(a_exclude_terms), std::ref(exclusions), std::ref(exc_mutex));
+        m_threads.emplace_back(&Query::process_exclusion_terms_worker, this, start, end, std::ref(a_exclude_terms), std::ref(exclusions));
     }
 
-    for (auto& thread : threads) {
+    for (auto& thread : m_threads) {
         thread.join();
     }
 
     return filter_exclusions(a_results_from_process_include, exclusions);
 }
 
-void Query::process_exclusion_terms_worker(size_t a_start, size_t a_end, const ExcludeTerms_Neg& a_exclude_terms, std::unordered_set<std::string>& a_exclusions, std::mutex& a_exclusions_mutex) const 
+void Query::process_exclusion_terms_worker(size_t a_start, size_t a_end, const ExcludeTerms_Neg& a_exclude_terms, std::unordered_set<std::string>& a_exclusions) const 
 {
     for (size_t i = a_start; i < a_end; ++i) {
         auto exc_res = get_results_for_term(a_exclude_terms[i]);
@@ -186,7 +182,7 @@ void Query::process_exclusion_terms_worker(size_t a_start, size_t a_end, const E
             local_exclusions.insert(page.first);
         }
         {
-            std::lock_guard<std::mutex> lock(a_exclusions_mutex);
+            std::lock_guard<std::mutex> lock(m_mutex);
             a_exclusions.insert(local_exclusions.begin(), local_exclusions.end());    
         }
         
