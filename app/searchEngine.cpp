@@ -49,11 +49,9 @@ int main()
         Client client(port, 1401);
 
         std::unique_ptr<Crawler> crawler;
-        if(config.crawl_mode() == CRAWL_MODE::BFS) {
-            crawler = std::make_unique<BFSCrawler>(config);
-        }/* else if (config.crawl_mode() == CRAWL_MODE::DFS) {
+        if (config.crawl_mode() == CRAWL_MODE::DFS) {
             crawler = std::make_unique<DFSCrawler>(config);
-        } */else {
+        } else {
             crawler = std::make_unique<BFSCrawler>(config);
         }
 
