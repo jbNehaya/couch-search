@@ -13,7 +13,6 @@ public:
     
     PageParser() = default;
     ~PageParser() = default;
-
     void parsing(std::string const& a_content);
     unordered_map word_index() const;
     std::set<std::string> page_links() const;
@@ -22,12 +21,9 @@ public:
 private:
 
     void extract_links(GumboNode* a_node);
-
     void extract_words(GumboNode* a_node);
     void process_gumbo_text_node(GumboNode* a_node);
     void process_gumbo_node_element(GumboNode* a_node);
-
-
     void extract_title(GumboNode* a_node) ;
     GumboNode* find_child_with_tag(GumboNode* a_node, GumboTag a_tag);
     std::string extract_text_from_node(GumboNode* a_node);
@@ -41,3 +37,5 @@ private:
 };
 
 #endif //PAGEPARSER_HPP_
+
+
