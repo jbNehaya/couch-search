@@ -13,7 +13,6 @@ public:
     
     void send_request(const std::string& a_term);
     std::string recieve_response();
-    void wait_for_completion();
 
 private:
 
