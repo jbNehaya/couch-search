@@ -27,12 +27,11 @@ void Configuration::load_configuration_from_file(std::string const& a_file_path)
         m_start_URLs = config.at("start_URLs").get<vector>();
         m_max_pages = config.value("max_pages", 0);
         m_max_depth = config.value("max_depth", 0);
-
         std::string mode = config.value("crawl_mode", "BFS");
         if(mode == "DFS"){
-        m_crawl_mode = CRAWL_MODE::DFS;
+            m_crawl_mode = CRAWL_MODE::DFS;
         }else{
-        m_crawl_mode = CRAWL_MODE::BFS;
+            m_crawl_mode = CRAWL_MODE::BFS;
         }
     } catch (json::exception const& e){
         std::cerr << "error parsing configuration file: "<< e.what() << "\n";
