@@ -1,10 +1,13 @@
 #ifndef DFSCRAWLER_HPP_
 #define DFSCRAWLER_HPP_
 
+#include <stack>
+#include <thread>
+#include<mutex>
+#include<condition_variable>
 #include "crawler.hpp"
 #include "configuration.hpp"
 #include "pageParser.hpp"
-#include <stack>
 
 class DFSCrawler : public Crawler {
 public:
@@ -24,6 +27,7 @@ private:
     bool is_valid_link(std::string const& a_URL) const override;
     void print_information() const override;
     void dfs_crawl(std::vector<std::string> const& a_startUrls);
+    void worker_thread();
 
 private:
 
@@ -36,6 +40,12 @@ private:
     std::unordered_map<std::string, std::set<std::string>> m_page_linkes;
     std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>> m_words_index;
     std::unordered_map<std::string, std::string> m_page_titles;
+
+    std::mutex m_mutex;
+    std::condition_variable m_cond_var;
+    std::stack<std::pair<std::string, unsigned int>> m_toVisit;
+    bool m_done = false;
+    std::vector<std::thread> m_threads;
 };
 
 #endif // DFSCRAWLER_HPP_
