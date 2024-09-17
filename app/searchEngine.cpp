@@ -21,7 +21,7 @@ void save_data(const std::unordered_map<std::string, std::unordered_map<std::str
 void handle_search_queries(Client& a_client, Query& a_query) 
 {
     std::string search_term;
-    std::cout << "Crawling is complete. You can now search for terms.\n";
+    
 
     while (true) {
         std::cout << "Enter a search term (or 'exit' to quit): ";
@@ -58,12 +58,18 @@ int main()
         std::thread crawl_thread([&crawler]() 
         {
             crawler->start_crawling();
+            std::cout << "\nCrawling is complete. Saving.\n";
             save_data(crawler->words_index(), crawler->page_titles());
+            std::cout << "\nCrawling is complete. You can now search for terms.\n";
         });
         
+        std::cout << "Crawling......\n";
+
+        crawl_thread.join();
+
         Query query(crawler->words_index(), crawler->page_titles(), 10); 
         handle_search_queries(client, query);
-        crawl_thread.join();
+        
     
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
