@@ -1,17 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from typing import List, Dict
 import json
+from dataLoader import DataLoader
 
 app = FastAPI()
-
-try:
-    with open('data.json', 'r') as f:
-        data = json.load(f)
-except FileNotFoundError:
-    data = {"words_index": {}, "page_titles": {}}
-
-WORDS_INDEX = data.get("words_index", {})
-PAGE_TITLES = data.get("page_titles", {})
+loader =  DataLoader('data.json')
 
 def classify_terms_positive_negative(term: str):
     positive_terms = []
@@ -26,10 +19,10 @@ def classify_terms_positive_negative(term: str):
     
     return positive_terms, negative_terms
 
-def build_response(results: set): 
+def build_response(results: set, page_titles: Dict[str, str]): 
     response = []
     for url in results:
-        title = PAGE_TITLES.get(url, 'Unknown title')
+        title = page_titles.get(url, 'Unknown title')
         response.append({'url': url, 'title': title})
     
     return response
@@ -43,7 +36,9 @@ async def search(term: str):
 
 
     results = set()
-
+    WORDS_INDEX = loader.get_words_index()
+    PAGE_TITLES = loader.get_page_titles()
+    
     for word in positive_terms:
         urls = WORDS_INDEX.get(word, {})        
         results.update(urls.keys())
@@ -53,7 +48,7 @@ async def search(term: str):
         results.difference_update(urls.keys())
 
 
-    response = build_response(results)
+    response = build_response(results, PAGE_TITLES)
     print(f"Response for query '{term}': {response}")
     return response
 
