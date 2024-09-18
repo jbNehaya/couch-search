@@ -14,8 +14,8 @@ public:
     PageParser() = default;
     ~PageParser() = default;
     void parsing(std::string const& a_content);
-    unordered_map word_index() const;
-    std::set<std::string> page_links() const;
+    unordered_map const& word_index() const;
+    std::set<std::string> const& page_links() const;
     std::string const& title() const;
 
 private:

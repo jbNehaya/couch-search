@@ -16,12 +16,12 @@ void PageParser::parsing(std::string const& a_content)
     gumbo_destroy_output(&kGumboDefaultOptions, output);
 }
 
-PageParser::unordered_map PageParser::word_index() const
+PageParser::unordered_map const& PageParser::word_index() const
 {
     return m_word_index;
 }
 
-std::set<std::string> PageParser::page_links() const
+std::set<std::string> const& PageParser::page_links() const
 {
     return m_page_links;
 }

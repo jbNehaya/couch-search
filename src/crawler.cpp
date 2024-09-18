@@ -27,12 +27,12 @@ void Crawler::start_crawling()
     print_information();
 }
 
-std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>> Crawler::words_index() const 
+std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>> const&  Crawler::words_index() const 
 {
     return m_words_index;
 }
 
-std::unordered_map<std::string, std::string> Crawler::page_titles() const 
+std::unordered_map<std::string, std::string>  const& Crawler::page_titles() const 
 {
     return m_page_titles;
 }

@@ -19,9 +19,9 @@ public:
     Crawler(Configuration const& a_config);
     virtual ~Crawler() = default;
 
-    virtual void start_crawling() override;
-    std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>> words_index() const;
-    std::unordered_map<std::string, std::string> page_titles() const;
+    void start_crawling() override;
+    std::unordered_map<std::string, std::unordered_map<std::string, unsigned int>> const& words_index() const;
+    std::unordered_map<std::string, std::string> const&  page_titles() const;
 
 protected:
 
