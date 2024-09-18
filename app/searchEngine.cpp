@@ -45,8 +45,8 @@ int main()
     try {
         Configuration config("configuration.json");
 
-        std::string port = "127.0.0.1"; 
-        Client client(port, 1401);
+        std::string ip = "127.0.0.1"; 
+        Client client(ip, 1401);
 
         std::unique_ptr<Crawler> crawler;
         if (config.crawl_mode() == CRAWL_MODE::DFS) {
